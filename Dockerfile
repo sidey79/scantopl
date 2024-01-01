@@ -1,6 +1,6 @@
 FROM golang:alpine AS builder
 
-WORKDIR $GOPATH/src/github.com/Celedhrim/scantopl/
+WORKDIR $GOPATH/src/github.com/StarkZarn/scantopl/
 
 COPY . .
 

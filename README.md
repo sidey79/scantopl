@@ -39,7 +39,7 @@ provide the paperless-ngx url , the paperless-ngx token and the scanservjs outpu
 Have a working go env then
 
 ```
-go install github.com/Celedhrim/scantopl@master
+go install github.com/StarkZarn/scantopl@master
 ``` 
 
 ### Docker
