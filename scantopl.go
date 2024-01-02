@@ -21,6 +21,15 @@ const (
 	PauseDuration = 1 * time.Second
 )
 
+var httpClient = &http.Client{Timeout: 10 * time.Second}
+
+func init() {
+	log.SetLevel(log.InfoLevel)
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp: true,
+	})
+}
+
 func FilenameWithoutExtension(fn string) string {
 	return strings.TrimSuffix(path.Base(fn), path.Ext(fn))
 }
@@ -55,7 +64,7 @@ func createForm(form map[string]string) (string, io.Reader, error) {
 	return mp.FormDataContentType(), body, nil
 }
 
-func uploadFile(document, plurl, pltoken string) {
+func uploadFile(document, plurl, pltoken string, removeFile func(string) error) {
 	form := map[string]string{"document": "@" + document, "title": TitleFromFileName(document)}
 	ct, body, err := createForm(form)
 	if err != nil {
@@ -72,8 +81,7 @@ func uploadFile(document, plurl, pltoken string) {
 	req.Header.Set("Content-Type", ct)
 	req.Header.Set("Authorization", "Token "+pltoken)
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		log.Error("Error uploading file:", err)
 		return
@@ -83,14 +91,14 @@ func uploadFile(document, plurl, pltoken string) {
 		log.Warn("Upload failed with response code:", resp.StatusCode)
 	} else {
 		log.Info("Upload successful, removing file:", document)
-		err := os.Remove(document)
+		err := removeFile(document)
 		if err != nil {
 			log.Warn("Error removing file:", err)
 		}
 	}
 }
 
-func watchDirectory(watcher *fsnotify.Watcher, done chan bool, plurl, pltoken string) {
+func watchDirectory(watcher *fsnotify.Watcher, done chan bool, plurl, pltoken string, removeFile func(string) error) {
 	for {
 		select {
 		case event, ok := <-watcher.Events:
@@ -98,7 +106,7 @@ func watchDirectory(watcher *fsnotify.Watcher, done chan bool, plurl, pltoken st
 				done <- true
 				return
 			}
-			handleFileEvent(event, plurl, pltoken)
+			handleFileEvent(event, plurl, pltoken, removeFile)
 		case err, ok := <-watcher.Errors:
 			if !ok {
 				done <- true
@@ -109,11 +117,11 @@ func watchDirectory(watcher *fsnotify.Watcher, done chan bool, plurl, pltoken st
 	}
 }
 
-func handleFileEvent(event fsnotify.Event, plurl, pltoken string) {
+func handleFileEvent(event fsnotify.Event, plurl, pltoken string, removeFile func(string) error) {
 	if event.Has(fsnotify.Create) && strings.HasPrefix(path.Base(event.Name), "pl_") {
-		time.Sleep(PauseDuration)
 		log.Info("New file to upload:", event.Name)
-		uploadFile(event.Name, plurl, pltoken)
+		time.Sleep(PauseDuration) // Consider a more robust solution for file readiness
+		uploadFile(event.Name, plurl, pltoken, removeFile)
 	}
 }
 
@@ -140,7 +148,24 @@ func main() {
 	defer watcher.Close()
 
 	done := make(chan bool)
-	go watchDirectory(watcher, done, *plurl, *pltoken)
+	go func() {
+		for {
+			select {
+			case event, ok := <-watcher.Events:
+				if !ok {
+					done <- true
+					return
+				}
+				handleFileEvent(event, *plurl, *pltoken, os.Remove)
+			case err, ok := <-watcher.Errors:
+				if !ok {
+					done <- true
+					return
+				}
+				log.Warn("Error watching directory:", err)
+			}
+		}
+	}()
 
 	err = watcher.Add(*scandir)
 	if err != nil {
