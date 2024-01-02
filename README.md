@@ -1,5 +1,7 @@
 # scantopl
 
+An updated fork of celedhrim's original work.
+
 Automatically send [scanservjs](https://github.com/sbs20/scanservjs) scanned document to [paperless-ngx](https://github.com/paperless-ngx/paperless-ngx)
 
 ## How to configure
@@ -49,5 +51,5 @@ $ docker run --rm \
   -v /your/host/scanservjs/output:/output \
   -e PLURL=https://paperless.yourdomain.instance \
   -e PLTOKEN=XXXXXXXXXXXX \
-  ghcr.io/celedhrim/scantopl:master
+  ghcr.io/starkzarn/scantopl:master
 ```
