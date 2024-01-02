@@ -1,26 +1,35 @@
+name: Release
+
 on:
   push:
     branches:
       - master
 
 jobs:
-  releases-matrix:
-    name: Release Go Binary
+  build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        goos: [linux, windows, darwin]
-        goarch: [amd64, arm64]
-        exclude:
-          - goarch: arm64
-            goos: windows
+
     steps:
-    - uses: actions/checkout@v4.1.1
-    - uses: wangyoucao577/go-release-action@v1.41
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        goos: ${{ matrix.goos }}
-        goarch: ${{ matrix.goarch }}
-        goversion: "1.21"
-        md5sum: FALSE
-        compress_assets: OFF
+        go-version: 1.21
+
+    - name: Build
+      run: go build -o scantopl
+
+    - name: Upload Release Asset
+      id: release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ github.run_number }}
+        release_name: Release ${{ github.run_number }}
+        files: |
+          scantopl
+        draft: false
+        prerelease: false
