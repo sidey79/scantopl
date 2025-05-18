@@ -1,4 +1,4 @@
-FROM golang:alpine AS builder
+FROM golang:1.24.3 AS builder
 
 WORKDIR $GOPATH/src/github.com/StarkZarn/scantopl/
 
