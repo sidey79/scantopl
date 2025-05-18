@@ -1,4 +1,4 @@
-module github.com/StarkZarn/scantopl
+module github.com/sidey79/scantopl
 
 go 1.22
 
