@@ -71,6 +71,8 @@ func uploadFile(document, plurl, pltoken string, removeFile func(string) error) 
 		log.Error("Error creating form:", err)
 		return
 	}
+	log.Info("createForm reported error:", err)
+	log.Info("createForm reported contentType:", ct)
 
 	req, err := http.NewRequest("POST", plurl+"/api/documents/post_document/", body)
 	if err != nil {
