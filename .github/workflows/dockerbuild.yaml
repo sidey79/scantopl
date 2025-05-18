@@ -2,9 +2,14 @@ name: Create and publish Docker image
 
 on:
   push:
-    branches: ['master']
-  schedule:
-    - cron: '0 14 * * 1'
+  pull_request:
+  release:
+    types: 
+      - published
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
 
 env:
   REGISTRY: ghcr.io
@@ -40,18 +45,27 @@ jobs:
         id: meta
         uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5
         with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}},enable=${{ github.event.release.prerelease == 0 }}
             type=ref,event=branch
             type=ref,event=pr
-            type=semver,pattern=version
-            type=semver,pattern={{major}}
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6
         with:
           context: .
           platforms: linux/amd64
-          push: true
+          push: ${{ github.event_name == 'release' || contains(github.event.pull_request.labels.*.name, 'publishImage') }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: | 
+            type=gha,scope=linux/amd64
+          cache-to: type=gha,mode=max,scope=linux/amd64
+            BUILD_DATE=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
+            IMAGE_VERSION=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] }}
+            IMAGE_VCS_REF=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.revision'] }}
+            L_USAGE=${{ github.server_url }}/${{ github.repository }}/blob/${{ github.sha }}/README.md
+            L_VCS_URL=${{ github.server_url }}/${{ github.repository }}/
+            L_AUTHORS=${{ github.server_url }}/${{ github.repository }}/graphs/contributors
