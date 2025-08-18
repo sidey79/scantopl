@@ -1,12 +1,12 @@
 module github.com/sidey79/scantopl
 
-go 1.24.2
+go 1.25
 
 toolchain go1.25.0
 
 require (
 	github.com/fsnotify/fsnotify v1.9.0
-	github.com/jnovack/flag v1.24.2
+	github.com/jnovack/flag v1.25.0
 	github.com/sirupsen/logrus v1.9.3
 )
 
