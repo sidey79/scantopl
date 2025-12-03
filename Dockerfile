@@ -1,4 +1,4 @@
-FROM golang:1.25.3-alpine3.21@sha256:0c9f3e09a50a6c11714dbc37a6134fd0c474690030ed07d23a61755afd3a812f AS builder
+FROM golang:1.25.5-alpine3.21@sha256:b4dbd292a0852331c89dfd64e84d16811f3e3aae4c73c13d026c4d200715aff6 AS builder
 
 WORKDIR $GOPATH/src/github.com/sidey79/scantopl/
 
