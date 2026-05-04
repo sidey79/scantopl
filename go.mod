@@ -5,7 +5,7 @@ go 1.25
 toolchain go1.26.0
 
 require (
-	github.com/fsnotify/fsnotify v1.9.0
+	github.com/fsnotify/fsnotify v1.10.1
 	github.com/jnovack/flag v1.25.0
 	github.com/sirupsen/logrus v1.9.4
 )
