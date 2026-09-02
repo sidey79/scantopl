@@ -2,7 +2,7 @@ module github.com/sidey79/scantopl
 
 go 1.25
 
-toolchain go1.26.0
+toolchain go1.27.1
 
 require (
 	github.com/fsnotify/fsnotify v1.9.0
